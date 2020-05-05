@@ -1,0 +1,21 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t rtheory/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true rtheory/react-test npm test
+
+after_success:
+    - docker build -t rtheory/multi-client ./client
+    - docker build -t rtheory/multi-nginx ./nginx
+    - docker build -t rtheory/multi-server ./server
+    - docker build -t rtheory/multi-worker ./worker
+    # Push images to DockerHub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    - docker push rtheory/multi-client
+    - docker push rtheory/multi-nginx
+    - docker push rtheory/multi-server
+    - docker push rtheory/multi-worker
